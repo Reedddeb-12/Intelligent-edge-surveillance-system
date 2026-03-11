@@ -233,38 +233,16 @@ This will further improve system resilience in remote monitoring scenarios.
 
 ---
 
-# Repository Structure:
-edge-defense-surveillance-system
-│
-├── README.md
-├── LICENSE
-├── .gitignore
-│
-├── docs ->(system diagrams)
-│   ├── architecture.png
-│   ├── detection-pipeline.png
-│   ├── power-system.png
-│
-├── hardware ->(hardware design concepts)
-│   ├── block-diagram.md
-│   └── components.md
-│
-├── ml ->(machine learning pipeline documentation)
-│   ├── model-architecture.md
-│   ├── dataset.md
-│   └── training.md
-│
-├── system-design ->(architecture and workflow)
-│   ├── edge-processing.md
-│   └── data-flow.md
-│
-├── prototype ->(developmental roadmap)
-│   └── roadmap.md
-│
-└── code -> (contains core implementation modules)
-    ├── detection
-    ├── preprocessing
-    └── communication
+# Repository Overview:
+The repository is organized into multiple modules:
+
+- `code/` – core implementation modules
+- `system-design/` – architecture and system workflow
+- `ml-docs/` – machine learning pipeline documentation
+- `hardware/` – hardware design concepts
+- `docs/` – system diagrams
+- `prototype/` – development roadmap
+
 
 ---
 
