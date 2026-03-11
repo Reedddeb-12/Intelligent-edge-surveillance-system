@@ -66,6 +66,9 @@ The paper explores the integration of **edge computing, machine learning, and ef
 <p align="center">
   <img src="docs/paper-preview.jpeg" width="600"/>
 </p>
+Paper:
+Intelligent Edge Defence Surveillance System Using Machine Learning, Secure SDR Communication and Solar Based Power Management
+INSECT 2026
 
 # Key Innovation
 
