@@ -4,3 +4,9 @@ node_modules
 *.log
 backend/logs
 uploads
+hardware/
+ml/
+docs/
+prototype/
+system-design/
+communication-layer/

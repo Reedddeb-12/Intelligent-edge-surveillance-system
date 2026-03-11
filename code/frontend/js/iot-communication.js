@@ -10,60 +10,57 @@ class IoTCommunicationManager {
         this.maxReconnectAttempts = 5;
     }
 
-    // Initialize WebSocket connection for real-time communication
-    initializeWebSocket(url = 'ws://localhost:8080') {
+    // Initialize Socket.IO connection for real-time communication
+    initializeWebSocket(url = 'http://localhost:5000') {
         try {
-            this.websocket = new WebSocket(url);
+            // Use Socket.IO instead of native WebSocket
+            this.websocket = io(url, {
+                reconnection: true,
+                reconnectionAttempts: this.maxReconnectAttempts,
+                reconnectionDelay: 1000
+            });
 
-            this.websocket.onopen = () => {
-                console.log('WebSocket connected');
+            this.websocket.on('connect', () => {
+                console.log('Socket.IO connected');
                 this.isConnected = true;
                 this.reconnectAttempts = 0;
                 this.sendMessage('system', { type: 'handshake', clientId: this.generateClientId() });
-            };
+            });
 
-            this.websocket.onmessage = (event) => {
-                this.handleMessage(event.data);
-            };
+            this.websocket.on('message', (data) => {
+                this.handleMessage(data);
+            });
 
-            this.websocket.onerror = (error) => {
-                console.error('WebSocket error:', error);
+            this.websocket.on(('connect_error'), (error) => {
+                console.error('Socket.IO connection error:', error);
                 this.isConnected = false;
-            };
+            });
 
-            this.websocket.onclose = () => {
-                console.log('WebSocket disconnected');
+            this.websocket.on('disconnect', (reason) => {
+                console.log('Socket.IO disconnected:', reason);
                 this.isConnected = false;
-                this.attemptReconnect(url);
-            };
+            });
+
+            // Listen for any topic dynamically if the backend supports it, 
+            // or we'll handle it via the 'message' event and custom handlers.
 
             return true;
         } catch (error) {
-            console.error('Failed to initialize WebSocket:', error);
+            console.error('Failed to initialize Socket.IO:', error);
             return false;
         }
     }
 
-    // Attempt to reconnect WebSocket
+    // Handled by Socket.IO automatically, but keeping for compatibility
     attemptReconnect(url) {
-        if (this.reconnectAttempts < this.maxReconnectAttempts) {
-            this.reconnectAttempts++;
-            const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-            
-            console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
-            
-            setTimeout(() => {
-                this.initializeWebSocket(url);
-            }, delay);
-        } else {
-            console.error('Max reconnection attempts reached');
-        }
+        // Socket.IO handles this via built-in reconnection logic
+        console.log('Socket.IO is handling reconnection automatically');
     }
 
-    // Send message through WebSocket
+    // Send message through Socket.IO
     sendMessage(topic, data) {
         if (!this.isConnected || !this.websocket) {
-            console.warn('WebSocket not connected. Message queued.');
+            console.warn('Socket.IO not connected. Message queued.');
             return false;
         }
 
@@ -75,7 +72,8 @@ class IoTCommunicationManager {
         };
 
         try {
-            this.websocket.send(JSON.stringify(message));
+            // Socket.IO uses emit and handles JSON automatically
+            this.websocket.emit('message', message);
             return true;
         } catch (error) {
             console.error('Failed to send message:', error);
@@ -223,7 +221,7 @@ class IoTCommunicationManager {
     // Simulate device data for demo purposes
     simulateDeviceData() {
         const deviceIds = ['A1', 'B3', 'C2', 'D4', 'E5', 'F6'];
-        
+
         deviceIds.forEach(id => {
             this.registerDevice(id, {
                 name: `Unit ${id}`,

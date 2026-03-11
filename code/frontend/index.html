@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced ML Detection - Drone Defense System</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
+
     <!-- TensorFlow.js and Detection Models -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.11.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3"></script>
-    
+
     <!-- YOLO Model Support -->
     <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/ort.min.js"></script>
-    
+
+    <!-- Socket.IO Client -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
     <!-- Leaflet.js for Maps -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-    
+
     <style>
         * {
             margin: 0;
@@ -128,8 +132,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         #videoElement {
@@ -166,9 +175,21 @@
             font-size: 1.1rem;
         }
 
-        .threat-low { border-color: var(--accent-color); color: var(--accent-color); }
-        .threat-medium { border-color: #ff8800; color: #ff8800; }
-        .threat-high { border-color: var(--warning-color); color: var(--warning-color); animation: pulse 1s infinite; }
+        .threat-low {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .threat-medium {
+            border-color: #ff8800;
+            color: #ff8800;
+        }
+
+        .threat-high {
+            border-color: var(--warning-color);
+            color: var(--warning-color);
+            animation: pulse 1s infinite;
+        }
 
         .controls-panel {
             background: linear-gradient(135deg, var(--primary-color), #2d5a3d);
@@ -365,21 +386,29 @@
         }
 
         @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
         }
 
         @media (max-width: 1024px) {
             .main-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .map-container {
                 height: 300px;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <h1><i class="fas fa-brain"></i> AI Threat Detection System</h1>
@@ -439,7 +468,7 @@
 
             <div class="control-section">
                 <h3><i class="fas fa-sliders-h"></i> Detection Settings</h3>
-                
+
                 <div class="slider-container">
                     <label>Confidence Threshold</label>
                     <input type="range" id="thresholdSlider" min="0" max="100" value="60">
@@ -461,7 +490,8 @@
 
             <div class="control-section">
                 <h3><i class="fas fa-star"></i> Unique Features</h3>
-                <div style="background: rgba(255, 136, 0, 0.1); border: 1px solid #ff8800; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                <div
+                    style="background: rgba(255, 136, 0, 0.1); border: 1px solid #ff8800; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
                     <p style="margin: 0; color: #ff8800; font-weight: bold;">
                         <i class="fas fa-fire"></i> Threat Heatmap: ACTIVE
                     </p>
@@ -487,7 +517,8 @@
                 <button class="btn btn-secondary" onclick="showStatistics()">
                     <i class="fas fa-chart-pie"></i> View Statistics
                 </button>
-                <div style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85rem;">
+                <div
+                    style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85rem;">
                     <p><strong>Heatmap Points:</strong> <span id="heatmapCount">0</span></p>
                     <p><strong>Last Updated:</strong> <span id="heatmapTime">Never</span></p>
                 </div>
@@ -495,7 +526,8 @@
 
             <div class="control-section">
                 <h3><i class="fas fa-envelope"></i> Email Alerts</h3>
-                <div style="background: rgba(0, 255, 136, 0.1); border: 1px solid #00ff88; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+                <div
+                    style="background: rgba(0, 255, 136, 0.1); border: 1px solid #00ff88; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
                     <p style="margin: 0; color: #00ff88; font-weight: bold;">
                         <i class="fas fa-check-circle"></i> Auto Email Alerts
                     </p>
@@ -503,7 +535,8 @@
                         Each unique threat detected once, then looks for new threats
                     </p>
                 </div>
-                <button class="btn btn-primary" onclick="openMobileSettings()" style="background: linear-gradient(45deg, #00ff88, #00aa44);">
+                <button class="btn btn-primary" onclick="openMobileSettings()"
+                    style="background: linear-gradient(45deg, #00ff88, #00aa44);">
                     <i class="fas fa-envelope"></i> Set Email Address
                 </button>
                 <button class="btn btn-secondary" onclick="testMobileAlert()">
@@ -512,7 +545,8 @@
                 <button class="btn btn-secondary" onclick="resetAlertedThreats()">
                     <i class="fas fa-redo"></i> Reset Detected Threats
                 </button>
-                <div id="mobileStatus" style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85rem;">
+                <div id="mobileStatus"
+                    style="margin-top: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85rem;">
                     <p><strong>Status:</strong> <span id="alertStatus">Not Configured</span></p>
                     <p><strong>Methods:</strong> <span id="alertMethods">None</span></p>
                     <p><strong>Cooldown:</strong> <span id="alertCooldown">60 seconds</span></p>
@@ -591,7 +625,7 @@
         let userLocation = CONFIG.map.defaultLocation;
         let voiceEnabled = false;
         let soundDetectionEnabled = false;
-        
+
         let stats = {
             totalDetections: 0,
             totalThreats: 0,
@@ -602,7 +636,7 @@
         // Switch detection model
         function switchModel(model) {
             hybridDetector.setActiveModel(model);
-            
+
             // Update UI
             document.querySelectorAll('.model-btn').forEach(btn => btn.classList.remove('active'));
             if (model === 'coco') {
@@ -612,7 +646,7 @@
             } else if (model === 'hybrid') {
                 document.getElementById('hybridBtn').classList.add('active');
             }
-            
+
             showNotification(`Switched to ${model.toUpperCase()} mode`, 'success');
             updateModelInfo();
         }
@@ -620,17 +654,17 @@
         // Initialize on page load
         async function initialize() {
             showNotification('Initializing hybrid detection system...', 'info');
-            
+
             const success = await hybridDetector.initialize();
-            
+
             if (success) {
                 showNotification('Hybrid detection system ready!', 'success');
-                
+
                 // Set unique threat timeout from config
                 if (CONFIG.detection.uniqueThreatTimeout) {
                     hybridDetector.setAlertedThreatTimeout(CONFIG.detection.uniqueThreatTimeout);
                 }
-                
+
                 updateModelInfo();
             } else {
                 showNotification('Failed to load detection models', 'error');
@@ -638,7 +672,7 @@
 
             // Check if email is configured
             let userEmail = localStorage.getItem('userEmail') || CONFIG.email.defaultRecipient;
-            
+
             // If no email configured, prompt user
             if (!userEmail) {
                 showNotification('⚠️ Please configure your email address for alerts', 'info');
@@ -656,10 +690,10 @@
                         enablePush: CONFIG.push.enabled,
                         enableWebSocket: false
                     });
-                    
+
                     // Set cooldown from config
                     mobileNotifier.setCooldownPeriod(CONFIG.email.cooldownPeriod);
-                    
+
                     showNotification('✉️ Auto email alerts enabled: ' + userEmail, 'success');
                     updateMobileStatus();
                 }
@@ -667,14 +701,18 @@
 
             // Initialize map
             initializeMap();
-            
+
             // Get user location
             getUserLocation();
-            
+
             // Initialize unique features
             uniqueFeatures.initializeVoiceAlerts();
             uniqueFeatures.enableAutoResponse();
-            
+
+            // Initialize IoT and Real-time communication
+            iotManager.initializeWebSocket(CONFIG?.server?.url || 'http://localhost:5000');
+            iotManager.simulateDeviceData(); // Demo mode for devices
+
             // Fetch weather data
             if (userLocation) {
                 uniqueFeatures.fetchWeatherData(userLocation.lat, userLocation.lng);
@@ -685,7 +723,7 @@
         function initializeMap() {
             try {
                 liveMap = L.map('liveMap').setView([userLocation.lat, userLocation.lng], 15);
-                
+
                 // Dark theme tiles
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     attribution: '© OpenStreetMap contributors',
@@ -735,11 +773,11 @@
                             lat: position.coords.latitude,
                             lng: position.coords.longitude
                         };
-                        
+
                         if (liveMap && cameraMarker) {
                             liveMap.setView([userLocation.lat, userLocation.lng], 15);
                             cameraMarker.setLatLng([userLocation.lat, userLocation.lng]);
-                            
+
                             // Update coverage circle
                             L.circle([userLocation.lat, userLocation.lng], {
                                 color: '#00ff88',
@@ -748,7 +786,7 @@
                                 radius: 100
                             }).addTo(liveMap);
                         }
-                        
+
                         console.log('User location updated:', userLocation);
                         showNotification('Location detected', 'success');
                     },
@@ -820,14 +858,14 @@
             try {
                 const loadingEl = document.getElementById('videoLoading');
                 loadingEl.innerHTML = '<i class="fas fa-circle-notch"></i><p>Requesting camera access...</p>';
-                
+
                 showNotification('Requesting camera access...', 'info');
-                
+
                 const stream = await videoManager.initializeStream('main-camera', videoElement, 'webcam');
-                
+
                 if (stream) {
                     loadingEl.innerHTML = '<i class="fas fa-circle-notch"></i><p>Loading video stream...</p>';
-                    
+
                     // Wait for video to be ready
                     await new Promise((resolve) => {
                         videoElement.onloadedmetadata = () => {
@@ -835,17 +873,17 @@
                             resolve();
                         };
                     });
-                    
+
                     // Small delay to ensure video is playing
                     await new Promise(resolve => setTimeout(resolve, 500));
-                    
+
                     // Hide loading indicator
                     loadingEl.style.display = 'none';
-                    
+
                     isDetecting = true;
                     document.getElementById('startBtn').style.display = 'none';
                     document.getElementById('stopBtn').style.display = 'block';
-                    
+
                     startDetectionLoop();
                     showNotification('Detection started - Camera active!', 'success');
                 } else {
@@ -854,7 +892,7 @@
                 }
             } catch (error) {
                 console.error('Camera error:', error);
-                document.getElementById('videoLoading').innerHTML = 
+                document.getElementById('videoLoading').innerHTML =
                     '<i class="fas fa-exclamation-triangle"></i><p>Error: ' + error.message + '</p>';
                 showNotification('Camera error: ' + error.message, 'error');
             }
@@ -874,10 +912,10 @@
                 detectionInterval = null;
             }
             videoManager.stopAllStreams();
-            
+
             document.getElementById('stopBtn').style.display = 'none';
             document.getElementById('startBtn').style.display = 'block';
-            
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             clearThreatMarkers();
             showNotification('Detection stopped', 'info');
@@ -892,7 +930,7 @@
                 if (!isDetecting) return;
 
                 const predictions = await hybridDetector.detect(videoElement, canvas);
-                
+
                 if (predictions && predictions.length > 0) {
                     updateStats(predictions);
                     checkThreats(predictions);
@@ -906,10 +944,10 @@
         function updateStats(predictions) {
             stats.totalDetections += predictions.length;
             stats.detectionCount++;
-            
+
             predictions.forEach(pred => {
                 stats.confidenceSum += pred.score;
-                
+
                 if (['person', 'drone', 'airplane'].includes(pred.class)) {
                     stats.totalThreats++;
                 }
@@ -917,14 +955,14 @@
 
             document.getElementById('detectionCount').textContent = stats.totalDetections;
             document.getElementById('threatCount').textContent = stats.totalThreats;
-            
+
             const avgConfidence = (stats.confidenceSum / stats.totalDetections * 100).toFixed(0);
             document.getElementById('confidenceDisplay').textContent = avgConfidence + '%';
         }
 
         // Check for threats
         async function checkThreats(predictions) {
-            const threats = predictions.filter(p => 
+            const threats = predictions.filter(p =>
                 ['person', 'drone', 'airplane', 'bird', 'car', 'truck', 'motorcycle'].includes(p.class) && p.score > 0.7
             );
 
@@ -932,12 +970,12 @@
                 const maxThreat = threats.reduce((max, t) => t.score > max.score ? t : max);
                 const severity = maxThreat.score > 0.85 ? 'HIGH' : 'MEDIUM';
                 maxThreat.severity = severity;
-                
+
                 updateThreatLevel(severity);
-                
+
                 // Add threat marker to map
                 addThreatMarker(maxThreat);
-                
+
                 // Add to heatmap
                 const threatLat = userLocation.lat + (Math.random() - 0.5) * 0.002;
                 const threatLng = userLocation.lng + (Math.random() - 0.5) * 0.002;
@@ -945,10 +983,10 @@
                     { lat: threatLat, lng: threatLng },
                     severity
                 );
-                
+
                 // Broadcast to IoT system
                 iotManager.broadcastAlert('threat_detected', maxThreat, severity.toLowerCase());
-                
+
                 // Send mobile notification with snapshot
                 if (mobileNotifier.isEnabled) {
                     const snapshot = await mobileNotifier.captureSnapshot(videoElement);
@@ -970,14 +1008,14 @@
         function updateModelInfo() {
             const info = hybridDetector.getModelInfo();
             const stats = hybridDetector.getStatistics();
-            
+
             let modelName = 'COCO-SSD';
             if (info.activeModel === 'yolo') modelName = 'YOLOv8';
             else if (info.activeModel === 'hybrid') modelName = 'Hybrid (COCO + YOLO)';
-            
+
             document.getElementById('activeModel').textContent = modelName;
             document.getElementById('historySize').textContent = info.detectionHistorySize;
-            
+
             const mostCommon = Object.entries(stats.byType || {})
                 .sort((a, b) => b[1] - a[1])[0];
             document.getElementById('mostDetected').textContent = mostCommon ? mostCommon[0] : 'N/A';
@@ -993,7 +1031,7 @@
         document.getElementById('fpsSlider').addEventListener('input', (e) => {
             const value = e.target.value;
             document.getElementById('fpsValue').textContent = value + ' FPS';
-            
+
             if (isDetecting) {
                 stopDetection();
                 setTimeout(() => {
@@ -1022,14 +1060,14 @@
                 statistics: stats,
                 detections: hybridDetector.detectedThreats
             };
-            
+
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = `threat-detection-${Date.now()}.json`;
             a.click();
-            
+
             showNotification('Detection data exported', 'success');
         }
 
@@ -1041,7 +1079,7 @@
             frameCount++;
             const now = Date.now();
             const elapsed = now - lastTime;
-            
+
             if (elapsed >= 1000) {
                 const fps = Math.round(frameCount / (elapsed / 1000));
                 document.getElementById('fpsDisplay').textContent = fps;
@@ -1066,9 +1104,9 @@
                 animation: slideIn 0.3s ease;
             `;
             notification.textContent = message;
-            
+
             document.body.appendChild(notification);
-            
+
             setTimeout(() => {
                 notification.remove();
             }, 3000);
@@ -1087,12 +1125,12 @@
         function updateHeatmapInfo() {
             const heatmapData = uniqueFeatures.getHeatmapData();
             document.getElementById('heatmapCount').textContent = heatmapData.length;
-            
+
             if (heatmapData.length > 0) {
                 const lastPoint = heatmapData[heatmapData.length - 1];
                 const timeAgo = Math.round((Date.now() - lastPoint.timestamp) / 1000);
-                document.getElementById('heatmapTime').textContent = timeAgo < 60 
-                    ? `${timeAgo}s ago` 
+                document.getElementById('heatmapTime').textContent = timeAgo < 60
+                    ? `${timeAgo}s ago`
                     : `${Math.round(timeAgo / 60)}m ago`;
             } else {
                 document.getElementById('heatmapTime').textContent = 'Never';
@@ -1102,9 +1140,9 @@
         // Mobile notification functions
         function openMobileSettings() {
             const currentEmail = localStorage.getItem('userEmail') || mobileNotifier.userContacts.email || '';
-            
+
             const email = prompt('Enter your email address for threat alerts:', currentEmail);
-            
+
             if (email) {
                 // Validate email format
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1112,10 +1150,10 @@
                     showNotification('Invalid email format. Please try again.', 'error');
                     return;
                 }
-                
+
                 // Save to localStorage
                 localStorage.setItem('userEmail', email);
-                
+
                 mobileNotifier.initialize({
                     email: email,
                     phone: '',
@@ -1124,7 +1162,7 @@
                     enablePush: true,
                     enableWebSocket: false
                 });
-                
+
                 updateMobileStatus();
                 showNotification('✉️ Email alerts configured: ' + email, 'success');
             }
@@ -1136,7 +1174,7 @@
                 openMobileSettings();
                 return;
             }
-            
+
             showNotification('Sending test email alert...', 'info');
             mobileNotifier.testNotification();
         }
@@ -1150,21 +1188,21 @@
         function updateMobileStatus() {
             const status = mobileNotifier.getStatus();
             const userEmail = localStorage.getItem('userEmail');
-            
+
             document.getElementById('alertStatus').textContent = status.enabled ? 'Active ✓' : 'Not Configured';
             document.getElementById('alertStatus').style.color = status.enabled ? '#00ff88' : '#ff4444';
-            
+
             const methods = [];
             if (status.methods.email) methods.push('Email');
             if (status.methods.push) methods.push('Push Notifications');
-            
+
             document.getElementById('alertMethods').textContent = methods.length > 0 ? methods.join(', ') : 'None';
-            
+
             // Show email address
             if (userEmail) {
                 document.getElementById('alertMethods').textContent += ' (' + userEmail + ')';
             }
-            
+
             // Show alerted threats count
             const info = hybridDetector.getModelInfo();
             document.getElementById('alertedCount').textContent = info.alertedThreatsCount || 0;
@@ -1174,7 +1212,7 @@
         function toggleVoiceAlerts() {
             voiceEnabled = !voiceEnabled;
             document.getElementById('voiceBtn').textContent = voiceEnabled ? 'Disable Voice Alerts' : 'Enable Voice Alerts';
-            
+
             if (voiceEnabled) {
                 uniqueFeatures.speakAlert('Voice alerts enabled', 'normal');
                 showNotification('Voice alerts enabled', 'success');
@@ -1214,7 +1252,7 @@
 
         function showHeatmap() {
             const heatmapData = uniqueFeatures.getHeatmapData();
-            
+
             if (heatmapData.length === 0) {
                 showNotification('No heatmap data available yet. Start detection to collect data.', 'info');
                 return;
@@ -1243,7 +1281,7 @@
                     color = '#ffaa00'; // Low - Yellow
                     label = 'LOW';
                 }
-                
+
                 const circle = L.circle([point.lat, point.lng], {
                     color: color,
                     fillColor: color,
@@ -1251,7 +1289,7 @@
                     radius: 30 + (point.intensity * 50), // Size based on intensity
                     weight: 2
                 }).addTo(liveMap);
-                
+
                 // Add popup with info
                 const timeAgo = Math.round((Date.now() - point.timestamp) / 60000); // minutes ago
                 circle.bindPopup(`
@@ -1262,7 +1300,7 @@
                         <p style="margin: 3px 0;"><strong>Level:</strong> ${(point.intensity * 100).toFixed(0)}%</p>
                     </div>
                 `);
-                
+
                 window.heatmapCircles.push(circle);
             });
 
@@ -1303,4 +1341,5 @@ System Statistics:
         updateMobileStatus();
     </script>
 </body>
+
 </html>

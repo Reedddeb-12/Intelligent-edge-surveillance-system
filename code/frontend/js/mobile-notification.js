@@ -64,11 +64,11 @@ class MobileNotificationSystem {
     calculateThreatLevel(threatClass, confidence) {
         const highThreatObjects = ['person', 'knife', 'scissors', 'bottle', 'cell phone', 'backpack'];
         const mediumThreatObjects = ['car', 'truck', 'motorcycle', 'bicycle', 'dog', 'cat'];
-        
+
         let level = 'LOW';
         let color = '#00ff88';
         let emoji = '⚠️';
-        
+
         if (highThreatObjects.includes(threatClass.toLowerCase())) {
             if (confidence >= 0.8) {
                 level = 'CRITICAL';
@@ -88,7 +88,7 @@ class MobileNotificationSystem {
             color = confidence >= 0.7 ? '#ffaa00' : '#00ff88';
             emoji = confidence >= 0.7 ? '⚡' : 'ℹ️';
         }
-        
+
         return { level, color, emoji };
     }
 
@@ -237,7 +237,8 @@ class MobileNotificationSystem {
 
             // Call backend API (use dynamic URL)
             const serverUrl = CONFIG?.server?.url || window.location.origin;
-            const response = await fetch(`${serverUrl}/api/send-email`, {
+            const apiPrefix = '/api/v1/notifications';
+            const response = await fetch(`${serverUrl}${apiPrefix}/email`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -250,20 +251,20 @@ class MobileNotificationSystem {
             });
 
             const result = await response.json();
-            
+
             if (result.success) {
                 console.log('Email sent successfully:', result.messageId);
                 this.showNotification('Email alert sent to ' + this.userContacts.email, 'success');
                 return true;
             } else {
-                console.error('Email failed:', result.error);
-                this.showNotification('Email failed: ' + result.error, 'error');
+                console.error('Email failed:', result.error || result.message);
+                this.showNotification('Email failed: ' + (result.error || result.message), 'error');
                 return false;
             }
 
         } catch (error) {
             console.error('Email alert failed:', error);
-            this.showNotification('Email failed: Server not running. Start backend with "npm start"', 'error');
+            this.showNotification('Email failed: Server not reachable. Ensure backend is running.', 'error');
             return false;
         }
     }
@@ -279,30 +280,32 @@ class MobileNotificationSystem {
             const message = `${alertData.severityEmoji} ${alertData.severity} THREAT: ${alertData.threatType} detected (${alertData.confidence}% confidence) at ${new Date(alertData.timestamp).toLocaleTimeString()}. Check email for image.`;
 
             // Call backend API
-            const response = await fetch('http://localhost:3000/api/send-sms', {
+            const serverUrl = CONFIG?.server?.url || window.location.origin;
+            const apiPrefix = '/api/v1/notifications';
+            const response = await fetch(`${serverUrl}${apiPrefix}/sms`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    to: this.userContacts.phone,
+                    phone: this.userContacts.phone,
                     message: message
                 })
             });
 
             const result = await response.json();
-            
+
             if (result.success) {
-                console.log('SMS sent successfully:', result.sid);
+                console.log('SMS sent successfully:', result.sid || result.messageId);
                 this.showNotification('SMS alert sent to ' + this.userContacts.phone, 'success');
                 return true;
             } else {
-                console.error('SMS failed:', result.error);
-                this.showNotification('SMS failed: ' + result.error, 'error');
+                console.error('SMS failed:', result.error || result.message);
+                this.showNotification('SMS failed: ' + (result.error || result.message), 'error');
                 return false;
             }
 
         } catch (error) {
             console.error('SMS alert failed:', error);
-            this.showNotification('SMS failed: Server not running. Start backend with "npm start"', 'error');
+            this.showNotification('SMS failed: Server not reachable. Ensure backend is running.', 'error');
             return false;
         }
     }
@@ -527,10 +530,10 @@ class MobileNotificationSystem {
         const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
 
         const results = await this.sendThreatAlert(testThreat, blob);
-        
+
         console.log('Test notification results:', results);
         this.showNotification('Test notification sent!', 'info');
-        
+
         return results;
     }
 }
