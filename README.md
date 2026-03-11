@@ -55,6 +55,18 @@ The system is powered using a **solar energy module**, allowing continuous deplo
 
 ---
 
+## Research Background
+
+This project builds upon our research work on edge-based intelligent surveillance systems.
+
+Our research paper related to this work has been **accepted at INSECT 2026 (International Conference on Intelligent Systems and Emerging Communication Technologies)**.
+
+The paper explores the integration of **edge computing, machine learning, and efficient communication strategies** for surveillance in remote and low-connectivity environments.
+
+<p align="center">
+  <img src="docs/paper-preview.jpeg" width="600"/>
+</p>
+
 # Key Innovation
 
 The system combines **edge computing, machine learning and low-power deployment** to build a scalable rural surveillance solution.
